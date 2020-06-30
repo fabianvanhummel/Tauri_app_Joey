@@ -1,4 +1,7 @@
 ## In dit script maken we een body voor een app die raid data van de Tauri API afhaalt
+
+## rogue is ez loot
+
 url = "http://chapi.tauri.hu/apiIndex.php?apikey="
 api_key <- "aa7798b3e5032a0c89ce3a4d0ba6dd95"
 secret <- "8a80fb7c81fb718a7a80339d689582642974ce12"
