@@ -26,11 +26,9 @@ library(data.table)
 names <- c("Shruikán","Zhaolong","Juin","Gidan","Ryujinsama")
 ilvls <- GetItemlvl(url,api_key,secret,url_2,names = names)
 
-##raidlogs
-Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
-
+######### Guild raids
 for(i in 647034:647035){
-  par1 <- data.frame(r = '[EN] Evermoon', gn = 'Nightdawn',from = 1, limit = 50000)
+  par1 <- data.frame(r = '[EN] Evermoon', gn = 'Nightdawn',from = 0, limit = 50000)
   playraid <- fromJSON(GetTauri(url,api_key,secret,"raid-guild",par1))$response
 }
 
@@ -39,17 +37,52 @@ df_encounters <- cbind(df_encounters, playraid$logs$mapentry)
 df_encounters <- cbind(df_encounters, playraid$logs$encounter_data)
 df_encounters <- cbind(df_encounters, playraid$logs$guilddata)
 
-
+######### Meer raid info met alleen ID als input
 par <- data.frame(r = '[EN] Evermoon', id = 652341)
 playraid <- GetTauri(url = url,apikey = api_key,secret = secret,url2 = 'raid-log',par = par)
 
 playraid <- fromJSON(playraid)
 
 playraid <- data.frame(playraid[!(names(playraid) %in% c("mapentry", "encounter_data", "guilddata", "members", "items"))])
-df_encounters <- cbind(df_encounters, playraid$logs$mapentry)
-df_encounters <- cbind(df_encounters, playraid$logs$encounter_data)
-df_encounters <- cbind(df_encounters, playraid$logs$guilddata)
 
 ### Timestamp naar huidige datum / tijd
-as.POSIXct(1593717904, origin="1970-01-01")
+as.POSIXct(1593548982, origin="1970-01-01")
+
+##raidlogs
+for(i in (5000:10000)) {
+  Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
+  
+}
+
+
+## Items
+goede_items <- list()
+a = 1
+for(i in (110000:120000)) {
+  par1 <- data.frame(r = '[EN] Evermoon', e = i, expansion = 6)
+  playraid <- fromJSON(GetTauri(url,api_key,secret,"item-tooltip",par1))$response
+  if(length(playraid) > 0) {
+    a = 1
+    if(playraid$itemLevel > 527) { 
+      print(i)
+      goede_items[[playraid$name]] <- playraid
+    }
+  } else {
+    a = a + 1
+  }
+  
+  if(i %% 100 == 0) {
+    print(i)
+  }
+  
+  if(a > 10) {
+    print("Meer dan 10 NULL's achter elkaar")
+  }
+  
+}
+
+View(playraid$logs)
+
+
+
 
