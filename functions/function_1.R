@@ -12,7 +12,6 @@ GetTauri <- function(url,apikey,secret,url2,par,...){
   # JSON encoded
   r <- POST(paste0(url, apikey), body = temp_2)
 
-    result <- rawToChar(r$content)
-  print(result)
+  result <- rawToChar(r$content)
   return(result)
 }
