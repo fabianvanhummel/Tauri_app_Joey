@@ -6,9 +6,11 @@ url = "http://chapi.tauri.hu/apiIndex.php?apikey="
 api_key <- "aa7798b3e5032a0c89ce3a4d0ba6dd95"
 secret <- "8a80fb7c81fb718a7a80339d689582642974ce12"
 url_2 <- "character-sheet"
-name <- "Lesca"
 params <- data.frame(r = '[EN] Evermoon')
 
+for(i in list.files("functions/")) {
+  source(paste0("functions/", i))
+}
 
 
 library(RCurl)
@@ -16,6 +18,7 @@ library(RJSONIO)
 library(curl)
 library(httr)
 library(jsonlite)
+library(data.table)
 
 ##char <- (GetTauri(url = url,secret = secret,apikey = api_key,url2 = url_2,par = params))
 ##DT<-(fromJSON(char)) maak list
@@ -25,8 +28,31 @@ names <- c("Shruikán","Zhaolong","Juin","Gidan","Ryujinsama")
 ilvls <- GetItemlvl(url,api_key,secret,url_2,names = names)
 
 ##raidlogs
-#Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
-for(i in 22473:30000){
-par1 <- data.frame(r = '[EN] Evermoon',from = i)
-playraid <- fromJSON(GetTauri(url,api_key,secret,"raid-last",par1))
+
+Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
+
+for(i in 647034:647035){
+  par1 <- data.frame(r = '[EN] Evermoon', gn = 'Nightdawn',from = 1, limit = 50000)
+  playraid <- fromJSON(GetTauri(url,api_key,secret,"raid-guild",par1))$response
 }
+
+df_encounters <- data.frame(playraid$logs[!(names(playraid$logs) %in% c("mapentry", "encounter_data", "guilddata"))])
+df_encounters <- cbind(df_encounters, playraid$logs$mapentry)
+df_encounters <- cbind(df_encounters, playraid$logs$encounter_data)
+df_encounters <- cbind(df_encounters, playraid$logs$guilddata)
+
+
+par <- data.frame(r = '[EN] Evermoon', id = 652341)
+playraid <- GetTauri(url = url,apikey = api_key,secret = secret,url2 = 'raid-log',par = par)
+
+playraid <- fromJSON(playraid)
+
+playraid <- data.frame(playraid[!(names(playraid) %in% c("mapentry", "encounter_data", "guilddata", "members", "items"))])
+df_encounters <- cbind(df_encounters, playraid$logs$mapentry)
+df_encounters <- cbind(df_encounters, playraid$logs$encounter_data)
+df_encounters <- cbind(df_encounters, playraid$logs$guilddata)
+
+### Timestamp naar huidige datum / tijd
+as.POSIXct(1593717904, origin="1970-01-01")
+
+
