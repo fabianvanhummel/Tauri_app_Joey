@@ -5,23 +5,27 @@
 url = "http://chapi.tauri.hu/apiIndex.php?apikey="
 api_key <- "aa7798b3e5032a0c89ce3a4d0ba6dd95"
 secret <- "8a80fb7c81fb718a7a80339d689582642974ce12"
-url_2 <- "achievement-firsts"
-params <- data.frame(r = '[HU] Tauri WoW Server')
+url_2 <- "character-sheet"
+name <- "Lesca"
+params <- data.frame(r = '[EN] Evermoon')
+
 
 library(RCurl)
 library(RJSONIO)
 library(curl)
 library(httr)
+library(jsonlite)
 
-body <- list(secret = secret, url = url_2, params = params)
+##char <- (GetTauri(url = url,secret = secret,apikey = api_key,url2 = url_2,par = params))
+##DT<-(fromJSON(char)) maak list
 
-temp <- toJSON(body)
-# Hier halen we beide vierkante haken weg met een gsub, kan niet in een pattern want dan zeurt hij over regular expressions (heel ander verhaal)
-# Daarna moeten we HU en EN weer fixen, want daar moeten juist vierkante haken omheen, facking Hongaren
-temp_2 <- gsub("HU", "[HU]", gsub("EN", "[EN]", gsub("\\[", "", gsub("\\]", "", paste(temp)))))
+##get ilvls 
+names <- c("Shruikán","Zhaolong","Juin","Gidan","Ryujinsama")
+ilvls <- GetItemlvl(url,api_key,secret,url_2,names = names)
 
-# JSON encoded
-r <- POST(paste0(url, api_key), body = temp_2)
-
-result <- rawToChar(r$content)
-print(result)
+##raidlogs
+#Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
+for(i in 22473:30000){
+par1 <- data.frame(r = '[EN] Evermoon',from = i)
+playraid <- fromJSON(GetTauri(url,api_key,secret,"raid-last",par1))
+}
