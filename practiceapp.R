@@ -35,11 +35,6 @@ api_key <- "aa7798b3e5032a0c89ce3a4d0ba6dd95"
 secret <- "8a80fb7c81fb718a7a80339d689582642974ce12"
 
 
-
-
-
-
-
 #UI
 
 ui<- dashboardPage(
@@ -56,7 +51,8 @@ ui<- dashboardPage(
       box(width = 12,
           selectInput(inputId = "servername",choices = c("[EN] Evermoon","[HU] Tauri WoW Server","[HU] Warriors of Darkness"),multiple = FALSE,label = "Server Name"),
           textInput(inputId = "name", label = "Character Name", placeholder = "Character Name"),
-          actionButton("button", "Go"))
+          actionButton("naam", "Go"),
+          uiOutput("buttons_aangemaakt"))
     )
     
   ),
@@ -86,13 +82,21 @@ ui<- dashboardPage(
 
 
 server <- function(input,output,session){
+  
+  for(i in list.files("functions/")) {
+    source(paste0("functions/", i))
+  }
+  
   data1 <- list()
   raids <- list()
   raiddata <- list()
   raidlist <- list()
   logID <- list()
   IDS <- c()
-  observeEvent(input$button, {
+  koppeltabel <- 0
+  raidlist_backup <- list()
+  
+  observeEvent(input$naam, {
     
     data1 <- list()
     par <- data.frame( r = input$servername , n = input$name)
@@ -117,35 +121,62 @@ server <- function(input,output,session){
       ##make action button for each encounter
       
       raidlist <- c(raidlist, 
-                    list(actionButton(paste0('ID',logID[i,]), raiddata$encounter_data$encounter_name)))
-      
-      
-      
-      
-      
-      
-      
+                    list(actionButton(paste0('button',i), raiddata$encounter_data$encounter_name)))
       
     }
-    browser()
-    output$raidlist <- renderUI({raidlist})
+    koppeltabel <<- data.frame("ID" = logID[1:20,], "button" = c(1:20))
     
+    raidlist_backup <<- raidlist
+    
+    output$raidlist <- renderUI({raidlist})
   })
   
-    observeEvent({
-      browser()
-      reactiveValuesToList(input[[logID[,1]]])
-    },{
-      browser()
-      par3 <- data.frame(r = input$servername, id = logID[i,])
+  observeEvent(c(
+    input$button1,
+    input$button2,
+    input$button3,
+    input$button4,
+    input$button5,
+    input$button6,
+    input$button7,
+    input$button8,
+    input$button9,
+    input$button10,
+    input$button11,
+    input$button12,
+    input$button13,
+    input$button14,
+    input$button15,
+    input$button16,
+    input$button17,
+    input$button18,
+    input$button19,
+    input$button20
+  )
+  ,{
+    values <- reactiveValuesToList(input)
+    values <- values[names(values) %like% "button"]
+    if(any(unlist(values) == 1)) {
+      gekozen_button <- names(values)[unlist(values) == 1]
+      log_id <- koppeltabel[koppeltabel$button == gsub("button", "", gekozen_button),1]
+      par3 <- data.frame(r = input$servername, id = log_id)
       raiddata <- fromJSON(GetTauri(url,api_key,secret,"raid-log",par3))$response
       popupdata <- data.frame("name" = raiddata$members$name[order(raiddata$members$dmg_done, decreasing = TRUE)],
                               "dmg" = sort(raiddata$members$dmg_done, decreasing = TRUE))
-
-      toggleModal(session, "modalExample", "open")
-
-      output$popup <- renderUI({bsModal("modalExample",size = "large", renderTable(popupdata))})
-    })
+      
+      output$modaltable <- DT::renderDataTable({
+        DT::datatable(popupdata, escape = FALSE)
+      })
+      
+      showModal(modalDialog(
+        title = "Kekw",
+        dataTableOutput("modaltable")
+      ))    
+      
+      output$raidlist <- renderUI({raidlist_backup})
+      
+    }
+  })
   
   
   
