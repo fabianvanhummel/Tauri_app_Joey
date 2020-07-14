@@ -24,7 +24,7 @@ library(data.table)
 ##DT<-(fromJSON(char)) maak list
 
 ##get ilvls 
-names <- c("Shruikán","Zhaolong","Juin","Gidan","Ryujinsama")
+names <- c("Zhaolong","Juin","Gidan","Ryujinsama","Shruikán","Lesca","Zekkzo","Acsel")
 ilvls <- GetItemlvl(url,api_key,secret,url_2,names = names)
 
 
@@ -52,39 +52,173 @@ playraid <- data.frame(playraid[!(names(playraid) %in% c("mapentry", "encounter_
 as.POSIXct(1593548982, origin="1970-01-01")
 
 ##raidlogs
-for(i in (5000:10000)) {
-  Logs <- RaidLog(url = url, apikey = api_key,secret = secret,url2 = "raid-last", from = 22473,limit = 2)
-  
-}
+par2 <- data.frame(r= '[EN] Evermoon', from = 552341, limit = 100000)
+Logs <- GetTauri(url,api_key,secret,"raid-last",par2)
+
+
 
 
 ## Items
-goede_items <- list()
-a = 1
-for(i in (110000:120000)) {
-  par1 <- data.frame(r = '[EN] Evermoon', e = i, expansion = 6)
-  playraid <- fromJSON(GetTauri(url,api_key,secret,"item-tooltip",par1))$response
-  if(length(playraid) > 0) {
-    a = 1
-    if(playraid$itemLevel > 527) { 
-      print(i)
-      goede_items[[playraid$name]] <- playraid
-    }
-  } else {
-    a = a + 1
-  }
+# goede_items <- list()
+# a = 1
+# for(i in (110000:120000)) {
+#   par1 <- data.frame(r = '[EN] Evermoon', e = i, expansion = 6)
+#   playraid <- fromJSON(GetTauri(url,api_key,secret,"item-tooltip",par1))$response
+#   if(length(playraid) > 0) {
+#     a = 1
+#     if(playraid$itemLevel > 527) { 
+#       print(i)
+#       goede_items[[playraid$name]] <- playraid
+#     }
+#   } else {
+#     a = a + 1
+#   }
+#   
+#   if(i %% 100 == 0) {
+#     print(i)
+#   }
+#   
+#   if(a > 10) {
+#     print("Meer dan 10 NULL's achter elkaar")
+#   }
+#   
+# }
+# 
+# View(playraid$logs)
+
+
+
+
+
+raidID <- fromJSON(Logs)$response
+subset <- raidID$logs[raidID$logs$mapentry$name %in% "Siege of Orgrimmar",]
+logid <- subset$log_id
+
+itemlist <- list()
+
+
+for (i in 1:length(logid)){
   
-  if(i %% 100 == 0) {
+  par <- data.frame(r= '[EN] Evermoon', id = logid[i])
+  rlog <- fromJSON(GetTauri(url,api_key,secret,"raid-log",par))
+  itemlist[[as.character(logid[i])]] <- list(rlog$response$encounter_data$encounter_name,rlog$response$items$itemid)
+  
+}
+
+bosses <- c("Immerseus","Fallen Protectors","Norushen","Sha of Pride","Galakras","Iron Juggernaut","Kor'kron Dark Shaman","General Nazgrim","Malkorok","Spoils of Pandaria","Thok the Bloodthirsty","Siegecrafter Blackfuse","Paragons of the Klaxxi","Garrosh Hellscream")
+droplist <- vector("list", length(bosses))
+names(droplist) <- bosses
+
+for(i in 1:length(itemlist)){
+  boss <- itemlist[[i]][[1]]              ##assign boss uit itemlist
+  drops <- itemlist[[i]][[2]]             ##assign drops uit itemlist
+  droplist[[boss]] <- c(droplist[[boss]], drops)  ##maak list op met onder boss de drops
+  
+}
+droplisth <- vector("list", length(bosses)) ##heroic
+droplistn <- vector("list", length(bosses))  ##normal
+names(droplisth) <- bosses
+names(droplistn) <- bosses
+
+for (j in 1:length(bosses)) {
+  a=1
+  b=1
+  for(i in 1:lengths(droplist,use.names = FALSE)[j]){                        ##kijk voor alle elementen in droplist[boss]
+    par <- data.frame(r= '[EN] Evermoon', e = droplist[[j]][i])
+    result <- fromJSON(GetTauri(url,api_key,secret,"item-tooltip",par))
     print(i)
+    if(result$response$itemLevel >= 566){
+      
+      droplisth[[j]][a] <- result$response$item_name
+      a <- a+1
+    } 
+    else if(result$response$itemLevel <= 559){
+      
+      droplistn[[j]][b] <- result$response$item_name
+      b <- b+1
+    }
+    
   }
   
-  if(a > 10) {
-    print("Meer dan 10 NULL's achter elkaar")
+  
+}   
+
+
+##hou alleen unique
+
+droplisthuni <- lapply(droplisth, unique)
+droplistnuni <- lapply(droplistn, unique)
+##sorteer alfabetisch
+droplisthuni <- lapply(droplisthuni, sort)
+droplistnuni <- lapply(droplistnuni, sort)
+## GTFO met pets/echos
+droplisthuni <- droplisthuni[!(droplisthuni %in% c("Echoes of War","Kovok","Droplet of Y'Shaarj"))]
+droplistnuni <- droplistnuni[!(droplistnuni %in% c("Echoes of War","Kovok","Droplet of Y'Shaarj"))]
+
+
+
+##saveRDS(droplisthuni,file = "heroiclist.Rds")
+
+
+
+
+
+##zoek character/get info
+
+names <- "Drimwaz"
+
+par <- data.frame(r = "[EN] Evermoon", n = names)
+char <- fromJSON(GetTauri(url = url, apikey = api_key, secret = secret, url2 = "character-sheet",par = par))$response
+##check equipped items en check of er een beter item is
+
+ilvl <- char$characterItems$ilevel
+item <- char$characterItems$name
+
+eqp <- matrix(c(ilvl,item),ncol = 2) ##zet ilvl en itemname naast elkaar
+
+advice <- vector("numeric",nrow(eqp))
+for(i in 1:nrow(eqp)){
+  
+  if(ilvl[i] >= 588){
+    advice[i] <- "BIS"
+  }
+  else if(ilvl[i]==0){
+    "NA"
+  }
+  else if(ilvl[i]==572 || ilvl[i]==576 || ilvl[i]==580 || ilvl[i]==584){
+    advice[i] <- "Upgrade"
+  }
+  else if(ilvl[i]==566 || ilvl[i]==570 || ilvl[i]==574 || ilvl[i]==578 || ilvl[i]==582){
+    advice[i] <- "Upgrade or get heroic warforged"
+  }
+  else if(ilvl[i]==559 || ilvl[i]==563 || ilvl[i]==567 || ilvl[i]==571 || ilvl[i]==575){
+    advice[i] <- "Upgrade or get heroic"
+  }
+  else if(ilvl[i]==553 || ilvl[i]==557 || ilvl[i]==561 || ilvl[i]==565 || ilvl[i]==569){
+    advice[i] <- "Upgrade or get warforged or heroic"
+  }
+  else if(ilvl[i]==540 || ilvl[i]==544 || ilvl[i]==548 || ilvl[i]==552 || ilvl[i]==556){
+    advice[i] <- "Get normal version"
+  }
+  else if(ilvl[i]>1 && ilvl[i]<540){
+    advice[i] <- "do flex"
   }
   
 }
 
-View(playraid$logs)
+overview <- cbind(eqp,"advice" = advice)
+
+
+################idee##############
+
+##input = name,realm,spec
+##ouput = waar kun je het beste rolls gebruiken
+ 
+
+
+
+
+
 
 
 

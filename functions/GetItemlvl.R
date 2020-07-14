@@ -6,6 +6,7 @@ GetItemlvl <- function(url,apikey,secret,url2,names,...){
   for(i in 1:length(names)){
     par <- data.frame(r = '[EN] Evermoon', n = names[i] )
     data[[names[i]]] <- fromJSON(GetTauri(url = url,apikey = apikey, secret = secret, url2 = url2, par = par))
+ 
     ilvl[i] <- data[[names[i]]]$response$avgitemlevel
     if(ilvl[i]>570){
       comment[i] <- "bigdick"
