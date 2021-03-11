@@ -51,7 +51,7 @@ ui<- dashboardPage(
       box(width = 12,
           selectInput(inputId = "servername",choices = c("[EN] Evermoon","[HU] Tauri WoW Server","[HU] Warriors of Darkness"),multiple = FALSE,label = "Server Name"),
           textInput(inputId = "name", label = "Character Name", placeholder = "Character Name"),
-          actionButton("naam", "Go"),
+          actionButton("naam", "Go", easyOpen = TRUE),
           uiOutput("buttons_aangemaakt"))
     )
     
@@ -145,7 +145,7 @@ server <- function(input,output,session){
     input$button11,
     input$button12,
     input$button13,
-    input$button14,
+    input$button14,               
     input$button15,
     input$button16,
     input$button17,
@@ -158,21 +158,25 @@ server <- function(input,output,session){
     values <- values[names(values) %like% "button"]
     if(any(unlist(values) == 1)) {
       gekozen_button <- names(values)[unlist(values) == 1]
+      
       log_id <- koppeltabel[koppeltabel$button == gsub("button", "", gekozen_button),1]
       par3 <- data.frame(r = input$servername, id = log_id)
+     
       raiddata <- fromJSON(GetTauri(url,api_key,secret,"raid-log",par3))$response
       popupdata <- data.frame("name" = raiddata$members$name[order(raiddata$members$dmg_done, decreasing = TRUE)],
-                              "dmg" = sort(raiddata$members$dmg_done, decreasing = TRUE))
+                              "dmg" = sort(raiddata$members$dmg_done, decreasing = TRUE),
+                              "dps" = sort(format(round(raiddata$members$dmg_done/raiddata$fight_time, digits = 3),nsmall = 3), decreasing = TRUE))
       
       output$modaltable <- DT::renderDataTable({
         DT::datatable(popupdata, escape = FALSE)
       })
       
       showModal(modalDialog(
-        title = "Kekw",
-        dataTableOutput("modaltable")
+        title = "Raid",
+        dataTableOutput("modaltable"), easyClose = TRUE
       ))    
       
+    
       output$raidlist <- renderUI({raidlist_backup})
       
     }

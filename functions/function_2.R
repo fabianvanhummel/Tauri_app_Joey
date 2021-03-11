@@ -1,3 +1,0 @@
-lulw <- function() {
-  print("LULW")
-}

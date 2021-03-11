@@ -8,8 +8,8 @@ secret <- "8a80fb7c81fb718a7a80339d689582642974ce12"
 url_2 <- "character-sheet"
 params <- data.frame(r = '[EN] Evermoon')
 
-for(i in list.files("functions/")) {
-  source(paste0("functions/", i))
+for(i in list.files("fun/")) {
+  source(paste0("fun/", i))
 }
 
 
@@ -24,7 +24,7 @@ library(data.table)
 ##DT<-(fromJSON(char)) maak list
 
 ##get ilvls 
-names <- c("Zhaolong","Juin","Gidan","Ryujinsama","Shruikán","Lesca","Zekkzo","Acsel")
+names <- c("Zhaolong","Juin","Gidan","Ryujinsama","Shruikán","Lesca","Zekkzo","Acsel","Drimwaz","Nerzhuill","Lescha","Lescanoutchy")
 ilvls <- GetItemlvl(url,api_key,secret,url_2,names = names)
 
 
